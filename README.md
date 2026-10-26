@@ -127,6 +127,21 @@ npm start
 5. Add all environment variables from the table above in Render's dashboard
 6. Set `FRONTEND_URL` to your deployed frontend URL to enable CORS
 
+### Keep-alive
+
+`GET /api/health` runs a MongoDB query, so pinging it keeps both free tiers active:
+
+- **Render** spins the service down after 15 minutes without traffic. Point a free external
+  scheduler such as [cron-job.org](https://cron-job.org) or [UptimeRobot](https://uptimerobot.com)
+  at `https://sensory-safari-backend.onrender.com/api/health` every 10–14 minutes.
+- **MongoDB Atlas** pauses free clusters after long inactivity. The
+  [`Keep alive`](.github/workflows/keep-alive.yml) GitHub Actions workflow pings the endpoint
+  daily as a backstop. Set the `HEALTH_URL` repository variable to override the URL, or run it
+  manually from the Actions tab.
+
+GitHub disables scheduled workflows in public repos after 60 days without commits, so the
+external scheduler is the primary keep-alive.
+
 ---
 
 ## Project Structure

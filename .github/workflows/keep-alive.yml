@@ -1,0 +1,31 @@
+name: Keep alive
+
+# Pings /api/health once a day. That endpoint runs a MongoDB query, so this counts as
+# database activity and keeps the free Atlas cluster from being paused for inactivity.
+# Daily is too infrequent to stop Render's free tier from sleeping; use an external
+# scheduler for that (see "Keep-alive" in the README).
+
+on:
+  schedule:
+    # 03:17 UTC daily. Off the hour because GitHub delays or drops top-of-hour schedules.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ping /api/health
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://sensory-safari-backend.onrender.com/api/health' }}
+        # A sleeping Render instance can take about a minute to wake, and /api/health returns
+        # 503 until Mongo connects, so retry on any error. A final failure fails the run and
+        # GitHub emails the repo owner.
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --retry 5 --retry-delay 20 --retry-all-errors \
+            --max-time 120 \
+            "$HEALTH_URL"
