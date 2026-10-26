@@ -22,17 +22,19 @@ Built with Node.js, Express, MongoDB, and Cloudinary.
 | Method | Endpoint | Description             |
 | ------ | -------- | ----------------------- |
 | GET    | `/`      | API status confirmation |
+| GET    | `/api/health` | Mongo state, animal count, Cloudinary reachability (503 if unhealthy) |
 
 ### Animals
 
 | Method | Endpoint        | Description                                     |
 | ------ | --------------- | ----------------------------------------------- |
 | GET    | `/api/animals`  | Retrieve all animals                             |
-| POST   | `/api/animals`  | Add a new animal (supports image & audio upload) |
+| POST   | `/api/animals`  | Add a new animal (admin only, image & audio upload) |
 
 ### POST `/api/animals` — Request Body
 
-Supports both `multipart/form-data` (file uploads) and JSON.
+Requires `Authorization: Bearer <ADMIN_TOKEN>` (401 otherwise, 503 if `ADMIN_TOKEN` is not configured).
+Accepts `multipart/form-data` only.
 
 | Field       | Type            | Required | Description                              |
 | ----------- | --------------- | -------- | ---------------------------------------- |
@@ -41,8 +43,8 @@ Supports both `multipart/form-data` (file uploads) and JSON.
 | habitat     | String          | No       | Natural habitat description              |
 | facts       | String          | No       | Interesting facts about the animal       |
 | description | String          | No       | Detailed description (defaults to facts) |
-| image       | File or String  | No       | Image file upload or URL                 |
-| sound       | File or String  | No       | Audio file upload or URL                 |
+| image       | File            | Yes      | Image file (`image/*`, max 5 MB)          |
+| sound       | File            | Yes      | Audio file (`audio/*`, max 10 MB)         |
 
 ---
 
@@ -101,7 +103,8 @@ cp .env.example .env
 | CLOUDINARY_CLOUD_NAME  | Cloudinary cloud name                |
 | CLOUDINARY_API_KEY     | Cloudinary API key                   |
 | CLOUDINARY_API_SECRET  | Cloudinary API secret                |
-| FRONTEND_URL           | Deployed frontend URL (for CORS)    |
+| FRONTEND_URL           | Deployed frontend URL(s) for CORS, comma-separated |
+| ADMIN_TOKEN            | Password required to add animals (adding is disabled if unset) |
 
 ### Run
 
